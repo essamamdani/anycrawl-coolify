@@ -1,0 +1,155 @@
+# AnyCrawl - Coolify v4 Template
+# Pre-built images from: https://github.com/any4ai/AnyCrawl
+#
+# Deploy via Coolify:
+#   New Resource → Docker Compose → paste raw URL of this file
+#
+# Images:
+#   API:               ghcr.io/any4ai/anycrawl-api         (amd64 + arm64)
+#   Scrape Playwright: ghcr.io/any4ai/anycrawl-scrape-playwright (amd64 + arm64)
+#   Scrape Cheerio:    ghcr.io/any4ai/anycrawl-scrape-cheerio    (amd64 + arm64)
+#   Scrape Puppeteer:  ghcr.io/any4ai/anycrawl-scrape-puppeteer  (amd64 only)
+
+services:
+    api:
+        image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-latest}
+        environment:
+            NODE_ENV: production
+            ANYCRAWL_API_PORT: "8080"
+            ANYCRAWL_REDIS_URL: redis://redis:6379
+            ANYCRAWL_API_DB_TYPE: sqlite
+            ANYCRAWL_API_DB_CONNECTION: /usr/src/app/db/database.db
+
+            # Auth
+            ANYCRAWL_API_AUTH_ENABLED: ${ANYCRAWL_API_AUTH_ENABLED:-false}
+            ANYCRAWL_API_CREDITS_ENABLED: ${ANYCRAWL_API_CREDITS_ENABLED:-false}
+
+            # Browser / scraping
+            ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
+            ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
+            ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
+            ANYCRAWL_PROXY_STEALTH_URL: ${ANYCRAWL_PROXY_STEALTH_URL:-}
+            ANYCRAWL_AVAILABLE_ENGINES: ${ANYCRAWL_AVAILABLE_ENGINES:-playwright,cheerio}
+
+            # Concurrency
+            ANYCRAWL_MAX_CONCURRENCY: ${ANYCRAWL_MAX_CONCURRENCY:-50}
+            ANYCRAWL_MIN_CONCURRENCY: ${ANYCRAWL_MIN_CONCURRENCY:-5}
+
+            # Caching
+            ANYCRAWL_CACHE_ENABLED: ${ANYCRAWL_CACHE_ENABLED:-true}
+            ANYCRAWL_CACHE_DEFAULT_MAX_AGE: ${ANYCRAWL_CACHE_DEFAULT_MAX_AGE:-172800000}
+            ANYCRAWL_CACHE_SITEMAP_MAX_AGE: ${ANYCRAWL_CACHE_SITEMAP_MAX_AGE:-604800000}
+
+            # Storage (local by default; set to "s3" to enable S3)
+            ANYCRAWL_STORAGE: ${ANYCRAWL_STORAGE:-}
+            ANYCRAWL_S3_BUCKET: ${ANYCRAWL_S3_BUCKET:-}
+            ANYCRAWL_S3_REGION: ${ANYCRAWL_S3_REGION:-us-east-1}
+            ANYCRAWL_S3_ENDPOINT: ${ANYCRAWL_S3_ENDPOINT:-}
+            ANYCRAWL_S3_ACCESS_KEY: ${ANYCRAWL_S3_ACCESS_KEY:-}
+            ANYCRAWL_S3_SECRET_ACCESS_KEY: ${ANYCRAWL_S3_SECRET_ACCESS_KEY:-}
+
+            # AI / LLM (optional)
+            DEFAULT_LLM_MODEL: ${DEFAULT_LLM_MODEL:-}
+            DEFAULT_EXTRACT_MODEL: ${DEFAULT_EXTRACT_MODEL:-}
+            DEFAULT_EMBEDDING_MODEL: ${DEFAULT_EMBEDDING_MODEL:-}
+            OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+            OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+            CUSTOM_BASE_URL: ${CUSTOM_BASE_URL:-}
+            CUSTOM_API_KEY: ${CUSTOM_API_KEY:-}
+
+            # OCR (optional)
+            ANYCRAWL_VL_REC_SERVER_URL: ${ANYCRAWL_VL_REC_SERVER_URL:-}
+            ANYCRAWL_VL_REC_API_KEY: ${ANYCRAWL_VL_REC_API_KEY:-}
+            ANYCRAWL_VL_REC_MODEL: ${ANYCRAWL_VL_REC_MODEL:-PaddlePaddle/PaddleOCR-VL-1.5}
+
+            # Search
+            ANYCRAWL_SEARCH_ENABLED_ENGINES: ${ANYCRAWL_SEARCH_ENABLED_ENGINES:-ac-engine}
+            ANYCRAWL_AC_ENGINE_URL: ${ANYCRAWL_AC_ENGINE_URL:-}
+            ANYCRAWL_SEARXNG_URL: ${ANYCRAWL_SEARXNG_URL:-}
+
+            # Scheduler / Webhooks
+            ANYCRAWL_SCHEDULER_ENABLED: ${ANYCRAWL_SCHEDULER_ENABLED:-true}
+            ANYCRAWL_WEBHOOKS_ENABLED: ${ANYCRAWL_WEBHOOKS_ENABLED:-true}
+            ALLOW_LOCAL_WEBHOOKS: ${ALLOW_LOCAL_WEBHOOKS:-false}
+
+            # Domain (set by Coolify automatically)
+            ANYCRAWL_DOMAIN: ${SERVICE_FQDN_API_8080}
+        volumes:
+            - storage:/usr/src/app/storage
+            - db:/usr/src/app/db
+        depends_on:
+            redis:
+                condition: service_healthy
+        networks:
+            - anycrawl-network
+
+    scrape-playwright:
+        image: ghcr.io/any4ai/anycrawl-scrape-playwright:${ANYCRAWL_VERSION:-latest}
+        environment:
+            NODE_ENV: production
+            ANYCRAWL_REDIS_URL: redis://redis:6379
+            ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
+            ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
+            ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
+        volumes:
+            - storage:/usr/src/app/storage
+        depends_on:
+            redis:
+                condition: service_healthy
+        networks:
+            - anycrawl-network
+
+    scrape-cheerio:
+        image: ghcr.io/any4ai/anycrawl-scrape-cheerio:${ANYCRAWL_VERSION:-latest}
+        environment:
+            NODE_ENV: production
+            ANYCRAWL_REDIS_URL: redis://redis:6379
+            ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
+            ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
+            ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
+        volumes:
+            - storage:/usr/src/app/storage
+        depends_on:
+            redis:
+                condition: service_healthy
+        networks:
+            - anycrawl-network
+
+    # Puppeteer: amd64 only — remove this service on arm64 hosts
+    scrape-puppeteer:
+        image: ghcr.io/any4ai/anycrawl-scrape-puppeteer:${ANYCRAWL_VERSION:-latest}
+        environment:
+            NODE_ENV: production
+            ANYCRAWL_REDIS_URL: redis://redis:6379
+            ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
+            ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
+            ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
+        volumes:
+            - storage:/usr/src/app/storage
+        depends_on:
+            redis:
+                condition: service_healthy
+        networks:
+            - anycrawl-network
+
+    redis:
+        image: redis:7-alpine
+        command: redis-server --appendonly yes
+        volumes:
+            - redis-data:/data
+        networks:
+            - anycrawl-network
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    storage:
+    db:
+    redis-data:
+
+networks:
+    anycrawl-network:
+        driver: bridge
