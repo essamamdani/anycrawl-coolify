@@ -11,12 +11,12 @@ AnyCrawl is an open-source, multi-engine web crawler and scraping API supporting
 ### Option A — One-click via URL
 
 1. Open your Coolify dashboard
-2. Go to **New Resource → Docker Compose**
-3. Choose **"Load from URL"**
-4. Paste the raw URL of `docker-compose.yml`:
+2. Go to **New Resource → Git Based → Public Repository**
+3. Paste this URL into Repository URL (https://):
    ```
-   https://raw.githubusercontent.com/essamamdani/anycrawl-coolify/main/docker-compose.yml
+   https://www.github.com.com/essamamdani/anycrawl-coolify
    ```
+4. Select Build Pack `Docker Compose`
 5. Click **Continue**, review environment variables, then **Deploy**
 
 ### Option B — Copy & paste
