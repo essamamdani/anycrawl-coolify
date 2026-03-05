@@ -134,7 +134,7 @@ services:
             - db:/data
 
     api:
-        image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-v0.0.1-beta.19}
+        image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-latest}
         environment:
             SERVICE_FQDN_API_8080: 
             NODE_ENV: production
