@@ -136,6 +136,7 @@ services:
     api:
         image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-v0.0.1-beta.19}
         environment:
+            SERVICE_FQDN_API_8080: 
             NODE_ENV: production
             ANYCRAWL_API_PORT: "8080"
             ANYCRAWL_REDIS_URL: redis://redis:6379
