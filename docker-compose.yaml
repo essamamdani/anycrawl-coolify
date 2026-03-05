@@ -11,6 +11,128 @@
 #   Scrape Puppeteer:  ghcr.io/any4ai/anycrawl-scrape-puppeteer  (amd64 only)
 
 services:
+    # Init container: applies missing SQLite schema changes on existing deployments
+    # Runs before the API starts and exits when done
+    init-db:
+        image: alpine:3.19
+        command: >
+            sh -c "
+              apk add --no-cache sqlite >/dev/null 2>&1 &&
+              DB=/data/database.db &&
+              if [ ! -f \"$$DB\" ]; then echo 'No DB yet, skipping patch'; exit 0; fi &&
+              echo 'Patching SQLite schema...' &&
+              sqlite3 $$DB 'ALTER TABLE jobs ADD COLUMN user_id TEXT;' 2>/dev/null || true &&
+              sqlite3 $$DB 'ALTER TABLE jobs ADD COLUMN deducted_at INTEGER;' 2>/dev/null || true &&
+              sqlite3 $$DB 'ALTER TABLE request_log ADD COLUMN user_id TEXT;' 2>/dev/null || true &&
+              sqlite3 $$DB 'ALTER TABLE template_executions ADD COLUMN user_id TEXT;' 2>/dev/null || true &&
+              sqlite3 $$DB '
+                CREATE TABLE IF NOT EXISTS scheduled_tasks (
+                  uuid TEXT PRIMARY KEY NOT NULL,
+                  api_key_id TEXT REFERENCES api_key(uuid),
+                  user_id TEXT,
+                  name TEXT NOT NULL,
+                  description TEXT,
+                  task_type TEXT NOT NULL,
+                  task_payload TEXT NOT NULL,
+                  cron_expression TEXT NOT NULL,
+                  timezone TEXT NOT NULL DEFAULT ''UTC'',
+                  concurrency_mode TEXT NOT NULL DEFAULT ''skip'',
+                  max_executions_per_day INTEGER,
+                  min_credits_required INTEGER NOT NULL DEFAULT 1,
+                  is_active INTEGER NOT NULL DEFAULT 1,
+                  is_paused INTEGER NOT NULL DEFAULT 0,
+                  pause_reason TEXT,
+                  last_execution_at INTEGER,
+                  next_execution_at INTEGER,
+                  total_executions INTEGER NOT NULL DEFAULT 0,
+                  successful_executions INTEGER NOT NULL DEFAULT 0,
+                  failed_executions INTEGER NOT NULL DEFAULT 0,
+                  consecutive_failures INTEGER NOT NULL DEFAULT 0,
+                  tags TEXT,
+                  metadata TEXT,
+                  created_at INTEGER NOT NULL,
+                  updated_at INTEGER NOT NULL
+                );
+              ' 2>/dev/null || true &&
+              sqlite3 $$DB '
+                CREATE TABLE IF NOT EXISTS task_executions (
+                  uuid TEXT PRIMARY KEY NOT NULL,
+                  scheduled_task_uuid TEXT NOT NULL REFERENCES scheduled_tasks(uuid) ON DELETE CASCADE,
+                  execution_number INTEGER NOT NULL,
+                  idempotency_key TEXT NOT NULL UNIQUE,
+                  status TEXT NOT NULL DEFAULT ''pending'',
+                  started_at INTEGER,
+                  completed_at INTEGER,
+                  job_uuid TEXT REFERENCES jobs(uuid),
+                  error_message TEXT,
+                  error_code TEXT,
+                  error_details TEXT,
+                  triggered_by TEXT NOT NULL DEFAULT ''scheduler'',
+                  scheduled_for INTEGER NOT NULL,
+                  metadata TEXT,
+                  created_at INTEGER NOT NULL
+                );
+              ' 2>/dev/null || true &&
+              sqlite3 $$DB '
+                CREATE TABLE IF NOT EXISTS webhook_subscriptions (
+                  uuid TEXT PRIMARY KEY NOT NULL,
+                  api_key_id TEXT REFERENCES api_key(uuid),
+                  user_id TEXT,
+                  name TEXT NOT NULL,
+                  description TEXT,
+                  webhook_url TEXT NOT NULL,
+                  webhook_secret TEXT NOT NULL,
+                  scope TEXT NOT NULL DEFAULT ''all'',
+                  specific_task_ids TEXT,
+                  event_types TEXT NOT NULL,
+                  custom_headers TEXT,
+                  timeout_seconds INTEGER NOT NULL DEFAULT 10,
+                  max_retries INTEGER NOT NULL DEFAULT 3,
+                  retry_backoff_multiplier REAL NOT NULL DEFAULT 2,
+                  is_active INTEGER NOT NULL DEFAULT 1,
+                  consecutive_failures INTEGER NOT NULL DEFAULT 0,
+                  auto_disable_after_failures INTEGER NOT NULL DEFAULT 10,
+                  last_success_at INTEGER,
+                  last_failure_at INTEGER,
+                  total_deliveries INTEGER NOT NULL DEFAULT 0,
+                  successful_deliveries INTEGER NOT NULL DEFAULT 0,
+                  failed_deliveries INTEGER NOT NULL DEFAULT 0,
+                  tags TEXT,
+                  metadata TEXT,
+                  created_at INTEGER NOT NULL,
+                  updated_at INTEGER NOT NULL
+                );
+              ' 2>/dev/null || true &&
+              sqlite3 $$DB '
+                CREATE TABLE IF NOT EXISTS webhook_deliveries (
+                  uuid TEXT PRIMARY KEY NOT NULL,
+                  webhook_subscription_uuid TEXT NOT NULL REFERENCES webhook_subscriptions(uuid) ON DELETE CASCADE,
+                  event_type TEXT NOT NULL,
+                  event_source TEXT NOT NULL,
+                  event_source_id TEXT NOT NULL,
+                  status TEXT NOT NULL DEFAULT ''pending'',
+                  attempt_number INTEGER NOT NULL DEFAULT 1,
+                  max_attempts INTEGER NOT NULL DEFAULT 3,
+                  request_url TEXT NOT NULL,
+                  request_method TEXT NOT NULL DEFAULT ''POST'',
+                  request_headers TEXT,
+                  request_body TEXT,
+                  response_status INTEGER,
+                  response_headers TEXT,
+                  response_body TEXT,
+                  response_duration_ms INTEGER,
+                  error_message TEXT,
+                  error_code TEXT,
+                  next_retry_at INTEGER,
+                  created_at INTEGER NOT NULL,
+                  delivered_at INTEGER
+                );
+              ' 2>/dev/null || true &&
+              echo 'Schema patch done.'
+            "
+        volumes:
+            - db:/data
+
     api:
         image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-v0.0.1-beta.19}
         environment:
@@ -23,6 +145,7 @@ services:
             # Auth
             ANYCRAWL_API_AUTH_ENABLED: ${ANYCRAWL_API_AUTH_ENABLED:-false}
             ANYCRAWL_API_CREDITS_ENABLED: ${ANYCRAWL_API_CREDITS_ENABLED:-false}
+
 
             # Browser / scraping
             ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
@@ -80,6 +203,8 @@ services:
         depends_on:
             redis:
                 condition: service_healthy
+            init-db:
+                condition: service_completed_successfully
 
     scrape-playwright:
         image: ghcr.io/any4ai/anycrawl-scrape-playwright:${ANYCRAWL_VERSION:-latest}
