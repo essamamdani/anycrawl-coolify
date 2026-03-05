@@ -19,7 +19,7 @@ services:
         command: >
             sh -c "
               apk add --no-cache sqlite >/dev/null 2>&1 &&
-              DB=/data/database.db &&
+              DB=/usr/src/app/db/database.db &&
               echo 'Waiting for DB...' &&
               WAIT=0 && while [ ! -f \"$$DB\" ] && [ $$WAIT -lt 90 ]; do sleep 3; WAIT=$$((WAIT+3)); done &&
               if [ ! -f \"$$DB\" ]; then echo 'DB not found after 90s, skipping patch'; exit 0; fi &&
@@ -135,7 +135,7 @@ services:
               echo 'Schema patch done.'
             "
         volumes:
-            - db:/data
+            - db:/usr/src/app/db
 
     api:
         image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-latest}
