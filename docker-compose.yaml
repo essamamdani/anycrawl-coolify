@@ -220,6 +220,7 @@ services:
             ANYCRAWL_AVAILABLE_ENGINES: playwright
         volumes:
             - storage:/usr/src/app/storage
+            - db:/usr/src/app/db
         depends_on:
             redis:
                 condition: service_healthy
@@ -235,6 +236,7 @@ services:
             ANYCRAWL_AVAILABLE_ENGINES: cheerio
         volumes:
             - storage:/usr/src/app/storage
+            - db:/usr/src/app/db
         depends_on:
             redis:
                 condition: service_healthy
@@ -252,6 +254,7 @@ services:
             ANYCRAWL_AVAILABLE_ENGINES: puppeteer
         volumes:
             - storage:/usr/src/app/storage
+            - db:/usr/src/app/db
         depends_on:
             redis:
                 condition: service_healthy
