@@ -198,7 +198,7 @@ services:
             ALLOW_LOCAL_WEBHOOKS: ${ALLOW_LOCAL_WEBHOOKS:-false}
 
             # Domain (set by Coolify automatically)
-            ANYCRAWL_DOMAIN: ${SERVICE_FQDN_API_8080}
+            ANYCRAWL_DOMAIN: ${SERVICE_FQDN_API}
         volumes:
             - storage:/usr/src/app/storage
             - db:/usr/src/app/db
