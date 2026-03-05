@@ -20,7 +20,10 @@ services:
             sh -c "
               apk add --no-cache sqlite >/dev/null 2>&1 &&
               DB=/data/database.db &&
-              if [ ! -f \"$$DB\" ]; then echo 'No DB yet, skipping patch'; exit 0; fi &&
+              echo 'Waiting for DB...' &&
+              WAIT=0 && while [ ! -f \"$$DB\" ] && [ $$WAIT -lt 90 ]; do sleep 3; WAIT=$$((WAIT+3)); done &&
+              if [ ! -f \"$$DB\" ]; then echo 'DB not found after 90s, skipping patch'; exit 0; fi &&
+              sleep 2 &&
               echo 'Patching SQLite schema...' &&
               sqlite3 $$DB 'ALTER TABLE jobs ADD COLUMN user_id TEXT;' 2>/dev/null || true &&
               sqlite3 $$DB 'ALTER TABLE jobs ADD COLUMN deducted_at INTEGER;' 2>/dev/null || true &&
@@ -205,8 +208,6 @@ services:
         depends_on:
             redis:
                 condition: service_healthy
-            init-db:
-                condition: service_completed_successfully
 
     scrape-playwright:
         image: ghcr.io/any4ai/anycrawl-scrape-playwright:${ANYCRAWL_VERSION:-latest}
