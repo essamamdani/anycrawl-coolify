@@ -146,7 +146,6 @@ services:
             ANYCRAWL_API_AUTH_ENABLED: ${ANYCRAWL_API_AUTH_ENABLED:-false}
             ANYCRAWL_API_CREDITS_ENABLED: ${ANYCRAWL_API_CREDITS_ENABLED:-false}
 
-
             # Browser / scraping
             ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
             ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
@@ -170,6 +169,7 @@ services:
             ANYCRAWL_S3_ENDPOINT: ${ANYCRAWL_S3_ENDPOINT:-}
             ANYCRAWL_S3_ACCESS_KEY: ${ANYCRAWL_S3_ACCESS_KEY:-}
             ANYCRAWL_S3_SECRET_ACCESS_KEY: ${ANYCRAWL_S3_SECRET_ACCESS_KEY:-}
+
 
             # AI / LLM (optional)
             DEFAULT_LLM_MODEL: ${DEFAULT_LLM_MODEL:-}
@@ -214,6 +214,7 @@ services:
             ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
             ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
             ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
+            ANYCRAWL_AVAILABLE_ENGINES: playwright
         volumes:
             - storage:/usr/src/app/storage
         depends_on:
@@ -228,6 +229,7 @@ services:
             ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
             ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
             ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
+            ANYCRAWL_AVAILABLE_ENGINES: cheerio
         volumes:
             - storage:/usr/src/app/storage
         depends_on:
@@ -237,12 +239,14 @@ services:
     # Puppeteer: amd64 only — remove this service on arm64 hosts
     scrape-puppeteer:
         image: ghcr.io/any4ai/anycrawl-scrape-puppeteer:${ANYCRAWL_VERSION:-latest}
+        user: root
         environment:
             NODE_ENV: production
             ANYCRAWL_REDIS_URL: redis://redis:6379
             ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
             ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
             ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
+            ANYCRAWL_AVAILABLE_ENGINES: puppeteer
         volumes:
             - storage:/usr/src/app/storage
         depends_on:
