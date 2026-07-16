@@ -31,7 +31,7 @@ AnyCrawl is an open-source, multi-engine web crawler and scraping API supporting
 
 | Service | Image | Arch | Description |
 |---------|-------|------|-------------|
-| `anycrawl` | `ghcr.io/any4ai/anycrawl:latest` | amd64, arm64 | All-in-one container: API, scheduler, and all scrape engines |
+| `api` | `ghcr.io/any4ai/anycrawl:latest` | amd64, arm64 | All-in-one container: API, scheduler, and all scrape engines |
 | `postgres` | `postgres:16-alpine` | amd64, arm64 | PostgreSQL database |
 | `redis` | `redis:7-alpine` | amd64, arm64 | Redis queue + cache persistence |
 

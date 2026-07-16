@@ -36,7 +36,7 @@ services:
             retries: 5
         restart: unless-stopped
 
-    anycrawl:
+    api:
         image: ghcr.io/any4ai/anycrawl:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
         environment:
             SERVICE_FQDN_API_8080: 
