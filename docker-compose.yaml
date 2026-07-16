@@ -1,14 +1,12 @@
 # AnyCrawl - Coolify v4 Template (PostgreSQL Version)
-# Pre-built images from: https://github.com/any4ai/AnyCrawl
+# Pre-built image from: https://github.com/any4ai/AnyCrawl
 #
 # Deploy via Coolify:
 #   New Resource → Docker Compose → paste raw URL of this file
 #
-# Images:
-#   API:               ghcr.io/any4ai/anycrawl-api         (amd64 + arm64)
-#   Scrape Playwright: ghcr.io/any4ai/anycrawl-scrape-playwright (amd64 + arm64)
-#   Scrape Cheerio:    ghcr.io/any4ai/anycrawl-scrape-cheerio    (amd64 + arm64)
-#   Scrape Puppeteer:  ghcr.io/any4ai/anycrawl-scrape-puppeteer  (amd64 only)
+# Image:
+#   All-in-one: ghcr.io/any4ai/anycrawl (amd64 + arm64)
+#   Includes API, scheduler, and all scrape engines (playwright, cheerio, puppeteer)
 
 services:
     postgres:
@@ -26,12 +24,27 @@ services:
             retries: 5
         restart: unless-stopped
 
-    api:
-        image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
+    redis:
+        image: redis:7-alpine
+        command: redis-server --appendonly yes
+        volumes:
+            - redis-data:/data
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        restart: unless-stopped
+
+    anycrawl:
+        image: ghcr.io/any4ai/anycrawl:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
         environment:
             SERVICE_FQDN_API_8080: 
             NODE_ENV: production
             ANYCRAWL_API_PORT: "8080"
+            # External Redis (all-in-one image also starts an internal Redis,
+            # but the app is pointed at the persistent external Redis)
+            REDIS_URL: redis://redis:6379
             ANYCRAWL_REDIS_URL: redis://redis:6379
             ANYCRAWL_API_DB_TYPE: postgresql
             ANYCRAWL_API_DB_CONNECTION: postgresql://anycrawl:${POSTGRES_PASSWORD:-anycrawl_password}@postgres:5432/anycrawl
@@ -97,76 +110,7 @@ services:
                 condition: service_healthy
             postgres:
                 condition: service_healthy
-
-    scrape-playwright:
-        image: ghcr.io/any4ai/anycrawl-scrape-playwright:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
-        environment:
-            NODE_ENV: production
-            ANYCRAWL_REDIS_URL: redis://redis:6379
-            ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
-            ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
-            ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
-            ANYCRAWL_AVAILABLE_ENGINES: playwright
-            ANYCRAWL_API_DB_TYPE: postgresql
-            ANYCRAWL_API_DB_CONNECTION: postgresql://anycrawl:${POSTGRES_PASSWORD:-anycrawl_password}@postgres:5432/anycrawl
-        volumes:
-            - storage:/usr/src/app/storage
-        depends_on:
-            redis:
-                condition: service_healthy
-            postgres:
-                condition: service_healthy
-
-    scrape-cheerio:
-        image: ghcr.io/any4ai/anycrawl-scrape-cheerio:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
-        environment:
-            NODE_ENV: production
-            ANYCRAWL_REDIS_URL: redis://redis:6379
-            ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
-            ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
-            ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
-            ANYCRAWL_AVAILABLE_ENGINES: cheerio
-            ANYCRAWL_API_DB_TYPE: postgresql
-            ANYCRAWL_API_DB_CONNECTION: postgresql://anycrawl:${POSTGRES_PASSWORD:-anycrawl_password}@postgres:5432/anycrawl
-        volumes:
-            - storage:/usr/src/app/storage
-        depends_on:
-            redis:
-                condition: service_healthy
-            postgres:
-                condition: service_healthy
-
-    # Puppeteer: amd64 only — remove this service on arm64 hosts
-    scrape-puppeteer:
-        image: ghcr.io/any4ai/anycrawl-scrape-puppeteer:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
-        user: root
-        environment:
-            NODE_ENV: production
-            ANYCRAWL_REDIS_URL: redis://redis:6379
-            ANYCRAWL_HEADLESS: ${ANYCRAWL_HEADLESS:-true}
-            ANYCRAWL_IGNORE_SSL_ERROR: ${ANYCRAWL_IGNORE_SSL_ERROR:-true}
-            ANYCRAWL_PROXY_URL: ${ANYCRAWL_PROXY_URL:-}
-            ANYCRAWL_AVAILABLE_ENGINES: puppeteer
-            ANYCRAWL_API_DB_TYPE: postgresql
-            ANYCRAWL_API_DB_CONNECTION: postgresql://anycrawl:${POSTGRES_PASSWORD:-anycrawl_password}@postgres:5432/anycrawl
-        volumes:
-            - storage:/usr/src/app/storage
-        depends_on:
-            redis:
-                condition: service_healthy
-            postgres:
-                condition: service_healthy
-
-    redis:
-        image: redis:7-alpine
-        command: redis-server --appendonly yes
-        volumes:
-            - redis-data:/data
-        healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
+        restart: unless-stopped
 
 volumes:
     storage:

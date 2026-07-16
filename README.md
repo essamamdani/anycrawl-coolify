@@ -29,15 +29,13 @@ AnyCrawl is an open-source, multi-engine web crawler and scraping API supporting
 
 ## Services
 
-| Service | Image | Arch |
-|---------|-------|------|
-| `api` | `ghcr.io/any4ai/anycrawl-api:latest` | amd64, arm64 |
-| `scrape-playwright` | `ghcr.io/any4ai/anycrawl-scrape-playwright:latest` | amd64, arm64 |
-| `scrape-cheerio` | `ghcr.io/any4ai/anycrawl-scrape-cheerio:latest` | amd64, arm64 |
-| `scrape-puppeteer` | `ghcr.io/any4ai/anycrawl-scrape-puppeteer:latest` | **amd64 only** |
-| `redis` | `redis:7-alpine` | amd64, arm64 |
+| Service | Image | Arch | Description |
+|---------|-------|------|-------------|
+| `anycrawl` | `ghcr.io/any4ai/anycrawl:latest` | amd64, arm64 | All-in-one container: API, scheduler, and all scrape engines |
+| `postgres` | `postgres:16-alpine` | amd64, arm64 | PostgreSQL database |
+| `redis` | `redis:7-alpine` | amd64, arm64 | Redis queue + cache persistence |
 
-> **arm64 hosts (e.g. Apple Silicon, Ampere):** Remove the `scrape-puppeteer` service from the compose file before deploying, or set `ANYCRAWL_AVAILABLE_ENGINES=playwright,cheerio`.
+> **Puppeteer on arm64:** The all-in-one arm64 image does not include Puppeteer. Set `ANYCRAWL_AVAILABLE_ENGINES=playwright,cheerio` on arm64 hosts, or deploy on amd64 for full engine support.
 
 ---
 
@@ -138,7 +136,7 @@ Coolify manages three named volumes automatically:
 
 ## Domain & HTTPS
 
-Coolify assigns a domain to the `api` service automatically via `SERVICE_FQDN_API_8080`. HTTPS is managed by Coolify's built-in Traefik proxy — no manual configuration needed.
+Coolify assigns a domain to the `anycrawl` service automatically via `SERVICE_FQDN_API_8080`. HTTPS is managed by Coolify's built-in Traefik proxy — no manual configuration needed.
 
 ---
 
@@ -146,7 +144,7 @@ Coolify assigns a domain to the `api` service automatically via `SERVICE_FQDN_AP
 
 Replace `ANYCRAWL_VERSION=v1.0.0-beta.33` with a specific tag (e.g. `v1.0.0-beta.33`) to lock your deployment to a known release.
 
-Available tags: [ghcr.io/any4ai/anycrawl-api](https://github.com/any4ai/AnyCrawl/pkgs/container/anycrawl-api)
+Available tags: [ghcr.io/any4ai/anycrawl](https://github.com/any4ai/AnyCrawl/pkgs/container/anycrawl)
 
 ---
 
