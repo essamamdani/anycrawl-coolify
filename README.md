@@ -49,7 +49,7 @@ Coolify will surface all variables below for you to configure. Defaults work out
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ANYCRAWL_VERSION` | `latest` | Image tag to deploy (e.g. `v1.0.0-beta.15`) |
+| `ANYCRAWL_VERSION` | `v1.0.0-beta.33` | Image tag to deploy (e.g. `latest`, `v1.0.0-beta.33`) |
 | `ANYCRAWL_API_AUTH_ENABLED` | `false` | Enable API key authentication |
 | `ANYCRAWL_API_CREDITS_ENABLED` | `false` | Enable usage credit tracking |
 | `ANYCRAWL_AVAILABLE_ENGINES` | `playwright,cheerio` | Comma-separated list of enabled engines |
@@ -144,7 +144,7 @@ Coolify assigns a domain to the `api` service automatically via `SERVICE_FQDN_AP
 
 ## Pinning a Version
 
-Replace `ANYCRAWL_VERSION=latest` with a specific tag (e.g. `v1.0.0-beta.15`) to lock your deployment to a known release.
+Replace `ANYCRAWL_VERSION=v1.0.0-beta.33` with a specific tag (e.g. `v1.0.0-beta.33`) to lock your deployment to a known release.
 
 Available tags: [ghcr.io/any4ai/anycrawl-api](https://github.com/any4ai/AnyCrawl/pkgs/container/anycrawl-api)
 

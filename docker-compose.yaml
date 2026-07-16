@@ -27,7 +27,7 @@ services:
         restart: unless-stopped
 
     api:
-        image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-latest}
+        image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
         environment:
             SERVICE_FQDN_API_8080: 
             NODE_ENV: production
@@ -99,7 +99,7 @@ services:
                 condition: service_healthy
 
     scrape-playwright:
-        image: ghcr.io/any4ai/anycrawl-scrape-playwright:${ANYCRAWL_VERSION:-latest}
+        image: ghcr.io/any4ai/anycrawl-scrape-playwright:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
         environment:
             NODE_ENV: production
             ANYCRAWL_REDIS_URL: redis://redis:6379
@@ -118,7 +118,7 @@ services:
                 condition: service_healthy
 
     scrape-cheerio:
-        image: ghcr.io/any4ai/anycrawl-scrape-cheerio:${ANYCRAWL_VERSION:-latest}
+        image: ghcr.io/any4ai/anycrawl-scrape-cheerio:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
         environment:
             NODE_ENV: production
             ANYCRAWL_REDIS_URL: redis://redis:6379
@@ -138,7 +138,7 @@ services:
 
     # Puppeteer: amd64 only — remove this service on arm64 hosts
     scrape-puppeteer:
-        image: ghcr.io/any4ai/anycrawl-scrape-puppeteer:${ANYCRAWL_VERSION:-latest}
+        image: ghcr.io/any4ai/anycrawl-scrape-puppeteer:${ANYCRAWL_VERSION:-v1.0.0-beta.33}
         user: root
         environment:
             NODE_ENV: production
