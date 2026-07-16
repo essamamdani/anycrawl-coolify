@@ -26,14 +26,6 @@ services:
             retries: 5
         restart: unless-stopped
 
-    init-db:
-        image: alpine:3.19
-        restart: "no"
-        command: 'echo "PostgreSQL ready"'
-        depends_on:
-            postgres:
-                condition: service_healthy
-
     api:
         image: ghcr.io/any4ai/anycrawl-api:${ANYCRAWL_VERSION:-latest}
         environment:
@@ -105,8 +97,6 @@ services:
                 condition: service_healthy
             postgres:
                 condition: service_healthy
-            init-db:
-                condition: service_completed_successfully
 
     scrape-playwright:
         image: ghcr.io/any4ai/anycrawl-scrape-playwright:${ANYCRAWL_VERSION:-latest}
@@ -126,8 +116,6 @@ services:
                 condition: service_healthy
             postgres:
                 condition: service_healthy
-            init-db:
-                condition: service_completed_successfully
 
     scrape-cheerio:
         image: ghcr.io/any4ai/anycrawl-scrape-cheerio:${ANYCRAWL_VERSION:-latest}
@@ -170,8 +158,6 @@ services:
                 condition: service_healthy
             postgres:
                 condition: service_healthy
-            init-db:
-                condition: service_completed_successfully
 
     redis:
         image: redis:7-alpine

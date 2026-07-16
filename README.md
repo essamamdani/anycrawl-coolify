@@ -14,7 +14,7 @@ AnyCrawl is an open-source, multi-engine web crawler and scraping API supporting
 2. Go to **New Resource → Git Based → Public Repository**
 3. Paste this URL into Repository URL (https://):
    ```
-   https://www.github.com.com/essamamdani/anycrawl-coolify
+   https://github.com/essamamdani/anycrawl-coolify
    ```
 4. Select Build Pack `Docker Compose`
 5. Click **Continue**, review environment variables, then **Deploy**
@@ -131,7 +131,7 @@ Coolify manages three named volumes automatically:
 | Volume | Contents |
 |--------|----------|
 | `storage` | Crawl output files and screenshots |
-| `db` | SQLite database (`database.db`) |
+| `postgres-data` | PostgreSQL database files |
 | `redis-data` | Redis AOF persistence |
 
 ---
