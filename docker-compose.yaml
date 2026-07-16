@@ -135,8 +135,6 @@ services:
                 condition: service_healthy
             postgres:
                 condition: service_healthy
-            init-db:
-                condition: service_completed_successfully
 
     # Puppeteer: amd64 only — remove this service on arm64 hosts
     scrape-puppeteer:
